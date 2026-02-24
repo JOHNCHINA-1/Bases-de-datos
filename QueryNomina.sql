@@ -1,60 +1,124 @@
-create database NominaDB
+create database NominaDataBase
 go
 
-use NominaDB
+use NominaDataBase
 
-Create table Departamento(
-DepartamentoID int identity(0, 2) PRIMARY KEY not null,
-Nombre Varchar(50) not null
-)
-go
+CREATE TABLE Departamento (
+IdDepartamento INT IDENTITY(1,1) PRIMARY KEY,
+Nombre VARCHAR(100) NOT NULL
+);
 
-Create table Cargo(
-CargoID int identity (1, 1) PRIMARY KEY,
-Nombre varchar(30) not null,
-SalarioBase Decimal (10, 2),
-IdDepartamento int not null,
-FOREIGN KEY (idDepartamento) references Departamento (DepartamentoID)
-)
-go
+CREATE TABLE Cargo (
+IdCargo INT IDENTITY(1,1) PRIMARY KEY,
+Nombre VARCHAR(100) NOT NULL,
+SalarioBase DECIMAL(10,2) NOT NULL,
+IdDepartamento INT NOT NULL, FOREIGN KEY (IdDepartamento) REFERENCES Departamento(IdDepartamento)
+);
 
-Create table TipoContrato(
-ContratoID int identity(0, 5) PRIMARY KEY,
-Descripcion varchar(100) not null
-)
-go
+CREATE TABLE TipoContrato (
+IdTipoContrato INT IDENTITY(1,1) PRIMARY KEY,
+Descripcion VARCHAR(50) NOT NULL
+);
 
-Create table Empleado(
-EmpleadoID int identity (10, 1)PRIMARY KEY,
-Documento varchar(20) unique not null,
-Nombre varchar(30) not null,
-Apellidos varchar(50) not null,
-FechaIngreso date not null,
-IdCargo int not null,
-TipoContratoId int not null,
-FOREIGN KEY (IdCargo) references Cargo (CargoID),
-FOREIGN KEY (TipoContratoId) references TipoContrato (ContratoID),
-)
-go
+CREATE TABLE Empleado (
+IdEmpleado INT IDENTITY(1,1) PRIMARY KEY,
+Documento VARCHAR(20) UNIQUE NOT NULL,
+Nombre VARCHAR(100) NOT NULL,
+Apellido VARCHAR(100) NOT NULL,
+FechaIngreso DATE NOT NULL,
+IdCargo INT NOT NULL,
+IdTipocontrato INT NOT NULL, FOREIGN KEY (IdCargo) REFERENCES Cargo(IdCargo),
+FOREIGN KEY (IdTipoContrato) REFERENCES TipoContrato(IdTipoContrato)
+);
 
-Create table Nomina(
-NominaID int identity(1, 1) PRIMARY KEY,
-EmpleadoID int not null,
-FechaInicio date not null,
-FechaFin date not null,
-TotalDevengado Decimal (10, 2),
-TotalDeducciones Decimal (10, 2),
-NetoPagar Decimal (10, 2),
-FOREIGN KEY (EmpleadoID) references Empleado (EmpleadoID)
-)
-go
+CREATE TABLE Nomina (
+IdNomina INT IDENTITY(1,1) PRIMARY KEY,
+IdEmpleado INT NOT NULL,
+FechaInicio DATE NOT NULL,
+FechaFin DATE NOT NULL,
+TotalDevengado DECIMAL (10,2),
+TotalDeducciones DECIMAL (10,2),
+NetoPagar DECIMAL(10,2),
+FOREIGN KEY (IdEmpleado) REFERENCES Empleado(IdEmpleado)
+);
 
-Create table DetalleNomina(
-DetalleID int identity (0, 2) PRIMARY KEY,
-NominaID int not null,
-Concepto varchar(100) not null,
-Tipo varchar(20) CHECK (Tipo IN ('Devengado', 'Deduccion')),
-Valor Decimal (10, 2) not null,
-FOREIGN KEY (NominaID) references Nomina (NominaID)
-)
-go
+CREATE TABLE DetalleNomina (
+IdDetalle INT IDENTITY(1,1) PRIMARY KEY,
+IdNomina INT NOT NULL,
+Concepto VARCHAR (100) NOT NULL,
+Tipo VARCHAR(20) CHECK (Tipo IN ('DEVENGADO', 'DEDUCCION')),
+Valor DECIMAL(10,2) NOT NULL, FOREIGN KEY (IdNomina) REFERENCES Nomina (IdNomina)
+);
+
+Insert into Departamento
+Values
+('Sistemas'), ('Contabilidad'), ('RRHH'), ('Ventas')
+
+
+Insert into Cargo
+Values
+('Desarollador', 3500000, 1),
+('Analista contable', 28000000, 2 ),
+('Auxiliar RRHH', 2200000, 3), 
+('Ejecutivo COmercial', 30000000, 4)
+
+
+Insert into	TipoContrato
+Values 
+('Termino fijo'), ('Termino indefinido'), ('Prestacion de servicios')
+
+Insert into	Empleado
+Values
+('1010','Juan','Perez', '2024-01-10', 1, 2), 
+('2020', 'Maria', 'Gomez','2023-05-15', 2, 1), 
+('3030', 'Carlos', 'Lopez', '2022-08-01', 4, 2)
+
+
+Insert into Nomina (IdEmpleado,FechaInicio, FechaFin)
+Values
+(1, '2026-05-01', '2026-05-31'),
+(2, '2026-05-01','2026-05-31'), 
+(3, '2026-05-01','2026-05-31')
+
+Insert into DetalleNomina
+Values
+(1, 'Salario Basico', 'DEVENGADO', 3500000),
+(1, 'Salud', 'DEDUCCION', 1400000 ),
+(1, 'Pension', 'DEDUCCION', 140000), 
+(2, 'Salario Basico', 'DEVENGADO', 28000000),
+(2, 'Salud', 'DEDUCCION', 112000),
+(2, 'Pension', 'DEDUCCION', 112000),
+(3, 'Salario Basico', 'DEVENGADO', 3000000),
+(3, 'Comision', 'DEVENGADO', 500000),
+(3, 'Salud', 'DEDUCCION', 140000)
+
+Select * from Departamento
+
+Select * from Cargo
+Where SalarioBase > 3000000
+
+Select * from TipoContrato
+
+Select * from Empleado
+
+Select * from Empleado
+Where IdTipoContrato = 2
+
+Select E.Nombre, E.Apellido, C.Nombre as Cargo, D.Nombre as Departamento
+From Empleado E JOIN Cargo C
+on E.IdCargo = C.IdCargo JOIN Departameno.D
+on C.IdDepartamento = D.IdDepartamento
+
+Select E.Nombre, Sum(DN.Valor) as TotalDevengado
+From Empleado E JOIN Nomina N 
+on E.IdEmpleado = N.IdEmpleado JOIN DetalleNomina DN
+on N.IdNomina = DN.IdNomina
+Where DN.Tipo = 'DEVENGADO'
+Group By E.Nombre
+
+Select E.Nombre Sum(DN.Valor)as TotalDeducciones
+From Empleado E JOIN Nomina N 
+on E.IdEmpleado = N.IdEmpleado JOIN DetalleNomina DN
+on N.IdNomina = DN.IdNomina
+Where DN.Tipo = 'DEDUCCION'
+Group By E.Nombre
